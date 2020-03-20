@@ -134,7 +134,7 @@ def news_stats():
 
 @app.route('/api/new')
 def new_stats():
-	return json.dumps({"report":fetch_report()})
+	return json.dumps(fetch_report())
 
 @app.route('/api/total')
 def total_stats():
@@ -143,6 +143,10 @@ def total_stats():
 @app.route('/api/all')
 def all_stats():
 	return json.dumps(fetch_all())
+
+@app.route('/api/helpline')
+def helpline():
+	return json.dumps({'helpline':[{'state': 'Andhra Pradesh', 'phone': '0866-2410978'}, {'state': 'Arunachal Pradesh', 'phone': '9536055743'}, {'state': 'Assam', 'phone': '6913347770'}, {'state': 'Bihar', 'phone': '104'}, {'state': 'Chhattisgarh', 'phone': '077122-35091'}, {'state': 'Goa', 'phone': '104'}, {'state': 'Gujarat', 'phone': '104'}, {'state': 'Haryana', 'phone': '8558893911'}, {'state': 'Himachal Pradesh', 'phone': '104'}, {'state': 'Jharkhand', 'phone': '104'}, {'state': 'Karnataka', 'phone': '104'}, {'state': 'Kerala', 'phone': '0471-2552056'}, {'state': 'Madhya Pradesh', 'phone': '0755-2527177'}, {'state': 'Maharashtra', 'phone': '020-26127394'}, {'state': 'Manipur', 'phone': '3852411668'}, {'state': 'Meghalaya', 'phone': '9366090748'}, {'state': 'Mizoram', 'phone': '102'}, {'state': 'Nagaland', 'phone': '7005539653'}, {'state': 'Odisha', 'phone': '9439994859'}, {'state': 'Punjab', 'phone': '104'}, {'state': 'Rajasthan', 'phone': '0141-2225624'}, {'state': 'Sikkim', 'phone': '104'}, {'state': 'Tamil Nadu', 'phone': '044-29510500'}, {'state': 'Telangana', 'phone': '104'}, {'state': 'Tripura', 'phone': '0381-2315879'}, {'state': 'Uttarakhand', 'phone': '104'}, {'state': 'Uttar Pradesh', 'phone': '18001805145'}, {'state': 'West Bengal', 'phone': '3323412600'}, {'state': 'Andaman and Nicobar Islands', 'phone': '03192-232102'}, {'state': 'Chandigarh', 'phone': '9779558282'}, {'state': 'Dadra and Nagar Haveli and Daman &amp; Diu', 'phone': '104'}, {'state': 'Delhi', 'phone': '011-22307145'}, {'state': 'Jammu &amp; Kashmir', 'phone': '1912520982'}, {'state': 'Ladakh', 'phone': '1982256462'}, {'state': 'Lakshadweep', 'phone': '4896263742'}, {'state': 'Puducherry', 'phone': '104'}]})
 
 
 @app.route('/api/predict',methods=['POST'])

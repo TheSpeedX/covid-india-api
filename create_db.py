@@ -120,12 +120,14 @@ def fetch_news():
 def fetch_report():
 	conn=create_connection(database)
 	cur = conn.cursor()
-	cur.execute('''SELECT casereport FROM report; ''')
+	cur.execute('''SELECT cases,cured,death,casereport FROM report; ''')
 	data=cur.fetchall()
+	cur.execute('''SELECT cases,cured,death FROM latest; ''')
+	alldata=cur.fetchall()
 	try:
-		return data[0][0]
+		return {"cases":alldata[0][0],"cured":alldata[0][1],"death":alldata[0][2],"report":data[0][0]}
 	except:
-		return ""
+		return {"cases":0,"cured":0,"death":0,"report":""}
 def fetch_total():
 	conn=create_connection(database)
 	cur = conn.cursor()

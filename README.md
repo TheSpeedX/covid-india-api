@@ -29,6 +29,9 @@ Send A GET Request To ```http://domain.com/update/{password}```
 #### To Get A recent Reports After Update
 Send A GET Request To ```http://domain.com/api/new```
 
+#### To Get Helpline Numbers
+Send A GET Request To ```http://domain.com/api/helpline```
+
 #### To Get A State's Statistics
 Send A POST Request To ```http://domain.com/api/state```
 <br>
