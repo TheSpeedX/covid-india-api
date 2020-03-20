@@ -6,6 +6,8 @@ from sqlite3 import Error
 import re
 import requests
 import string
+from datetime import datetime
+
 
 app = Flask(__name__)
 # PASSWORD="5tr0ng_P@ssW0rD"
@@ -52,14 +54,17 @@ def update():
 		print(data)
 		print("\n\n")
 		update_state(conn,data[0],int(data[1])+int(data[2]),int(data[3]),int(data[4]))
-	newsdata=requests.get("https://covindia.netlify.com/").text
 	gen_new_report()
-	newsdata=newsdata[newsdata.find("<!-- LATEST UPDATE -->"):newsdata.find("<!-- LIST COUNT -->")]
-	data=re.findall(r"((?:ht|f)tps?:\/\/[-a-zA-Z0-9.]+\.[a-zA-Z]{2,3}(\/[^\"<]*)?)",newsdata)
-	filtered=[ d[0] for d in data ]
-	data=list(set(filtered))
-	update_news("\n".join(data))
-	print(data)
+	URL = 'https://www.google.com/search?pz=1&cf=all&ned=us&hl=en&tbm=nws&gl=us&as_q={query}&as_occt=any&as_drrb=b&as_mindate={month}%2F%{from_day}%2F{year}&as_maxdate={month}%2F{to_day}%2F{year}&authuser=0'	
+	cd = datetime.now().day
+	cm = datetime.now().month
+	response = requests.get(URL.format(query="Corona india", month=cm, from_day=cd, to_day=cd, year=20)).text
+
+	filtered=response.split('<div class="kCrYT">')[1:-1]
+	for x in range(0,len(filtered),2):
+		link=(filtered[x][filtered[x].find("https://"):filtered[x].find("&amp;")])
+		title=(filtered[x].split('</div>')[0].split('<div')[1].split('>')[1])
+		update_news(title,link)
 	return """
 <html> 
 <head> 
@@ -125,7 +130,7 @@ def state_stats():
 
 @app.route('/api/news')
 def news_stats():
-	return json.dumps({"news":fetch_news()})
+	return json.dumps(fetch_news())
 
 @app.route('/api/new')
 def new_stats():

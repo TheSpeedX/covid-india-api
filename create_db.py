@@ -33,9 +33,8 @@ def check_state(conn,state):
 def clear_latest(conn):
 	cur = conn.cursor()
 	cur.execute('''DELETE FROM latest;''')
-	conn.commit()
-	cur = conn.cursor()
 	cur.execute('''DELETE FROM report;''')
+	cur.execute('''DELETE FROM news;''')
 	conn.commit()
 def update_state(conn,state,cases,cured,death):
 	cur = conn.cursor()
@@ -55,11 +54,11 @@ def update_state(conn,state,cases,cured,death):
 	sql = '''UPDATE information SET cases = ? , cured = ? , death = ? WHERE state =? '''
 	cur.execute(sql, (cases,cured,death,state))
 	conn.commit()
-def update_news(news):
+def update_news(title,link):
 	conn=create_connection(database)
 	cur = conn.cursor()
-	sql = '''UPDATE report SET news = ? '''
-	cur.execute(sql, (news,))
+	sql = ''' INSERT INTO news(title,link) VALUES(?,?) '''
+	cur.execute(sql, (title,link))
 	conn.commit()
 	return cur.rowcount >=1
 def gen_new_report():
@@ -109,12 +108,15 @@ def fetch_all():
 def fetch_news():
 	conn=create_connection(database)
 	cur = conn.cursor()
-	cur.execute('''SELECT news FROM report; ''')
+	cur.execute('''SELECT title,link,time FROM news; ''')
 	data=cur.fetchall()
+	result=[]
 	try:
-		return data[0][0]
+		for d in data:
+			result.append({"title":d[0],"link":d[1],"time":d[2]})
+		return {"news":result}
 	except:
-		return ""
+		return {"status":"failed"}
 def fetch_report():
 	conn=create_connection(database)
 	cur = conn.cursor()
@@ -160,11 +162,16 @@ def main():
 									); """
 	sql_create_report_table = """ CREATE TABLE IF NOT EXISTS report (
 										id integer PRIMARY KEY,
-										news text DEFAULT "",
 										casereport text DEFAULT "",
 										cases number DEFAULT 0,
 										cured number DEFAULT 0,
 										death number DEFAULT 0
+									); """
+	sql_create_news_table = """ CREATE TABLE IF NOT EXISTS news (
+										id integer PRIMARY KEY,
+										title text DEFAULT "",
+										link text DEFAULT "",
+										time DATE DEFAULT (datetime('now','localtime'))
 									); """
 	# create a database connection
 	conn = create_connection(database)
@@ -175,6 +182,7 @@ def main():
 		create_table(conn, sql_create_info_table)
 		create_table(conn, sql_create_update_table)
 		create_table(conn, sql_create_report_table)
+		create_table(conn, sql_create_news_table)
  
 	else:
 		print("Error! cannot create the database connection.")
