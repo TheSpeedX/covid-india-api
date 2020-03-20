@@ -134,9 +134,9 @@ def fetch_total():
 	cur.execute('''SELECT cases,cured,death FROM report; ''')
 	data=cur.fetchall()[0]
 	try:
-		return {"cases":data[0],"cured":data[1],"death":data[2]}
+		return {"cases":data[0],"cured":data[1],"death":data[2],"hospitalized":(int(data[0])-int(data[1])-int(data[2]))}
 	except:
-		return {"cases":0,"cured":0,"death":0}
+		return {"cases":0,"cured":0,"death":0,"hospitalized":0}
 def predict(state):
 	conn=create_connection(database)
 	lcases=fetch_state(state)['cases']
