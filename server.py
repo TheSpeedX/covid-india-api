@@ -151,7 +151,7 @@ def all_stats():
 
 @app.route('/api/guides')
 def guides():
-	return json.dumps('{"guides":[{"title":"How it Spreads?","link":"https://www.cdc.gov/coronavirus/2019-ncov/prepare/transmission.html","description":"Learn how Covid-19 spread"},{"title":"Symptoms","link":"https://www.cdc.gov/coronavirus/2019-ncov/symptoms-testing/symptoms.html","description":"Learn how Covid-19 symptoms"},{"title":"Prevention & treatment","link":"https://www.cdc.gov/coronavirus/2019-ncov/prepare/prevention.html","description":"Learn Covid-19 treatments"},{"title":"What to do","link":"https://www.cdc.gov/coronavirus/2019-ncov/if-you-are-sick/steps-when-sick.html","description":"What to do if you get the virus"}]}')
+	return json.dumps(json.loads('{"guides":[{"title":"How it Spreads?","link":"https://www.cdc.gov/coronavirus/2019-ncov/prepare/transmission.html","description":"Learn how Covid-19 spread"},{"title":"Symptoms","link":"https://www.cdc.gov/coronavirus/2019-ncov/symptoms-testing/symptoms.html","description":"Learn how Covid-19 symptoms"},{"title":"Prevention & treatment","link":"https://www.cdc.gov/coronavirus/2019-ncov/prepare/prevention.html","description":"Learn Covid-19 treatments"},{"title":"What to do","link":"https://www.cdc.gov/coronavirus/2019-ncov/if-you-are-sick/steps-when-sick.html","description":"What to do if you get the virus"}]}'))
 
 @app.route('/api/helpline')
 def helpline():
