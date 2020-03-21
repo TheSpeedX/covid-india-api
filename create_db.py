@@ -122,7 +122,7 @@ def fetch_report():
 	cur = conn.cursor()
 	cur.execute('''SELECT casereport FROM report; ''')
 	data=cur.fetchall()
-	cur.execute('''SELECT cases,cured,death FROM latest; ''')
+	cur.execute('''SELECT sum(cases),sum(cured),sum(death) FROM latest; ''')
 	alldata=cur.fetchall()
 	response={}
 	try:
