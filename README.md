@@ -32,6 +32,9 @@ Send A GET Request To ```http://domain.com/api/new```
 #### To Get Helpline Numbers
 Send A GET Request To ```http://domain.com/api/helpline```
 
+#### To Get HOW-TO Guides
+Send A GET Request To ```http://domain.com/api/guides```
+
 #### To Get A State's Statistics
 Send A POST Request To ```http://domain.com/api/state```
 <br>

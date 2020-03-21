@@ -37,16 +37,21 @@ def index():
   <div class="centered-text"><h1><font color="#00ff00">
   <u>This is A Simple Corona Virus Infection in India API By SpeedX </u>
   </font></h1><br><br>
-  <h2><font color="#00ffff">For usage Mail SpeedX: 
-  <a href="mailto:ggspeedx29@gmail.com">ggspeedx29[at]gmail[dot]com</a>
-  </font></h2>
+  <font color="#00ffff">
+  <h3>
+  <a href="/readme">Click Here</a> To go to the README Page
+  </h3>
+  </font><br><br><br>
+  <h4><font color="#ff0000">
+Made With ❤ By   <a href="mailto:ggspeedx29@gmail.com">SpeedX</a>
+  </font></h4>
   </div></body></html>"""
 
 @app.route('/update/'+PASSWORD)
 def update():
 	text=requests.get("https://www.mohfw.gov.in/").text
 	statedata=text.split("<tr>")
-	statedata=statedata[1:-1]
+	statedata=statedata[1:-2]
 	conn=create_connection(database)
 	clear_latest(conn)
 	for state in statedata:
@@ -143,6 +148,10 @@ def total_stats():
 @app.route('/api/all')
 def all_stats():
 	return json.dumps(fetch_all())
+
+@app.route('/api/guides')
+def guides():
+	return json.dumps('{"guides":[{"title":"How it Spreads?","link":"https://www.cdc.gov/coronavirus/2019-ncov/prepare/transmission.html","description":"Learn how Covid-19 spread"},{"title":"Symptoms","link":"https://www.cdc.gov/coronavirus/2019-ncov/symptoms-testing/symptoms.html","description":"Learn how Covid-19 symptoms"},{"title":"Prevention & treatment","link":"https://www.cdc.gov/coronavirus/2019-ncov/prepare/prevention.html","description":"Learn Covid-19 treatments"},{"title":"What to do","link":"https://www.cdc.gov/coronavirus/2019-ncov/if-you-are-sick/steps-when-sick.html","description":"What to do if you get the virus"}]}')
 
 @app.route('/api/helpline')
 def helpline():
