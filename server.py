@@ -7,7 +7,7 @@ import re
 import requests
 import string
 from datetime import datetime
-
+import pickle
 
 app = Flask(__name__)
 # PASSWORD="5tr0ng_P@ssW0rD"
@@ -43,7 +43,7 @@ def index():
   </h3>
   </font><br><br><br>
   <h4><font color="#ff0000">
-Made With ❤ By   <a href="mailto:ggspeedx29@gmail.com">SpeedX</a>
+Made With ❤ By   <a href="https://github.com/TheSpeedX">SpeedX</a>
   </font></h4>
   </div></body></html>"""
 
@@ -54,7 +54,13 @@ def update():
 	statedata=text.split("<tr>")
 	statedata=statedata[1:-1]
 	conn=create_connection(database)
-	# olddata=fetch_report()
+	
+	
+	olddata=fetch_report()
+	with open('data.dump', 'wb') as handle:
+		pickle.dump(olddata, handle, protocol=pickle.HIGHEST_PROTOCOL)
+	
+	
 	clear_latest(conn)
 	for state in statedata:
 		data=re.findall(r"(?<=>)(.*)(?=<\/td>)",state)[1:]

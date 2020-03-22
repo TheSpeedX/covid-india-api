@@ -1,6 +1,7 @@
 import sqlite3
 from sqlite3 import Error
 import string
+import pickle
 database = r"firebase.db"
 
 def create_table(conn, create_table_sql):
@@ -51,7 +52,7 @@ def update_state(conn,state,cases,cured,death):
 	pcases=int(cases)-int(sdata['cases'])
 	pcured=int(cured)-int(sdata['cured'])
 	pdeath=int(death)-int(sdata['death'])
-	if pcases<=0 and pcured==0 and pdeath==0:
+	if pcases==0 and pcured==0 and pdeath==0:
 		conn.commit()
 		return False
 	sql = ''' INSERT INTO latest(state,cases,cured,death) VALUES(?,?,?,?) '''
@@ -131,16 +132,21 @@ def fetch_report():
 	data=cur.fetchall()
 	cur.execute('''SELECT sum(cases),sum(cured),sum(death) FROM latest; ''')
 	# cur.execute('''SELECT cases,cured,death FROM latest WHERE state = 'total'; ''')
-	response={}
+	response={"cases":0,"cured":0,"death":0}
+	try:
+		with open('data.dump', 'rb') as handle:
+			olddata = pickle.load(handle)
+	except:
+		olddata={"cases":0,"cured":0,"death":0}
 	try:
 		alldata=cur.fetchall()[0]
-		response["cases"]=alldata[0] if not alldata[0] is None else 0
-		response["cured"]=alldata[1] if not alldata[1] is None else 0
-		response["death"]=alldata[2] if not alldata[2] is None else 0
+		for i,key in enumerate(response):
+			response[key]=alldata[i] if not alldata[i] is None else 0
 	except:
-		response["cases"]=0
-		response["cured"]=0
-		response["death"]=0
+		response={"cases":0,"cured":0,"death":0}
+	
+	for i,key in enumerate(response):
+		response[key]=olddata[key] if response[key]==0 else response[key]	
 	try:
 		response["report"]=data[0][0]
 	except:
