@@ -36,6 +36,11 @@ def clear_latest(conn):
 	cur.execute('''DELETE FROM report;''')
 	cur.execute('''DELETE FROM news;''')
 	conn.commit()
+# def update_total(conn,cases,cured,death):
+	# cur=conn.cursor()
+	# sql = ''' INSERT INTO latest(state,cases,cured,death) VALUES(?,?,?,?) '''
+	# cur.execute(sql, ('total',cases,cured,death))
+	# conn.commit()
 def update_state(conn,state,cases,cured,death):
 	cur = conn.cursor()
 	state=state.lower()
@@ -61,6 +66,7 @@ def update_news(title,link):
 	cur.execute(sql, (title,link))
 	conn.commit()
 	return cur.rowcount >=1
+# def gen_new_report(totaldata):
 def gen_new_report():
 	conn=create_connection(database)
 	conn=create_connection(database)
@@ -78,6 +84,7 @@ def gen_new_report():
 	fullreport="\n".join(full)
 	cur.execute('''SELECT sum(cases),sum(cured),sum(death) FROM information; ''')
 	data=cur.fetchall()[0]
+	# data=totaldata
 	sql = ''' INSERT INTO report(casereport,cases,cured,death) VALUES(?,?,?,?) '''
 	cur.execute(sql, (fullreport,data[0],data[1],data[2]))
 	conn.commit()
@@ -123,12 +130,13 @@ def fetch_report():
 	cur.execute('''SELECT casereport FROM report; ''')
 	data=cur.fetchall()
 	cur.execute('''SELECT sum(cases),sum(cured),sum(death) FROM latest; ''')
-	alldata=cur.fetchall()
+	# cur.execute('''SELECT cases,cured,death FROM latest WHERE state = 'total'; ''')
 	response={}
 	try:
-		response["cases"]=alldata[0][0]
-		response["cured"]=alldata[0][1]
-		response["death"]=alldata[0][2]
+		alldata=cur.fetchall()[0]
+		response["cases"]=alldata[0] if not alldata[0] is None else 0
+		response["cured"]=alldata[1] if not alldata[1] is None else 0
+		response["death"]=alldata[2] if not alldata[2] is None else 0
 	except:
 		response["cases"]=0
 		response["cured"]=0

@@ -11,7 +11,7 @@ from datetime import datetime
 
 app = Flask(__name__)
 # PASSWORD="5tr0ng_P@ssW0rD"
-PASSWORD="SpeedX"
+PASSWORD="SpeedXXX"
 
 @app.route('/')
 def index():
@@ -49,16 +49,22 @@ Made With ❤ By   <a href="mailto:ggspeedx29@gmail.com">SpeedX</a>
 
 @app.route('/update/'+PASSWORD)
 def update():
-	text=requests.get("https://www.mohfw.gov.in/").text
+	maintext=requests.get("https://www.mohfw.gov.in/").text
+	text=maintext[maintext.find('<!-- data start-->'):maintext.find('<!--data end-->')]
 	statedata=text.split("<tr>")
-	statedata=statedata[1:-2]
+	statedata=statedata[1:-1]
 	conn=create_connection(database)
+	# olddata=fetch_report()
 	clear_latest(conn)
 	for state in statedata:
 		data=re.findall(r"(?<=>)(.*)(?=<\/td>)",state)[1:]
 		print(data)
 		print("\n\n")
 		update_state(conn,data[0],int(data[1])+int(data[2]),int(data[3]),int(data[4]))
+	text=maintext[maintext.find('<div class="information_block">'):maintext.find('<div class="table-responsive">')]
+	data=re.findall(r"(?<=>)\d+(?=<)",text)[:-1]
+	# update_total(conn,int(data[0])-int(olddata["cases"]),int(data[1])-int(olddata["cured"]),int(data[2])-int(olddata["death"]))
+	# gen_new_report(data)
 	gen_new_report()
 	URL = 'https://www.google.com/search?pz=1&cf=all&ned=us&hl=en&tbm=nws&gl=us&as_q={query}&as_occt=any&as_drrb=b&as_mindate={month}%2F%{from_day}%2F{year}&as_maxdate={month}%2F{to_day}%2F{year}&authuser=0'	
 	cd = datetime.now().day
@@ -148,10 +154,29 @@ def total_stats():
 @app.route('/api/all')
 def all_stats():
 	return json.dumps(fetch_all())
+	
+@app.route('/world')
+def world():
+	return """
+	<html>
+	<head>
+	</head>
+	<body style="margin:0px;padding:0px;overflow:hidden">
+    <iframe src="http://bing.com/covid" id="world" frameborder="0" style="overflow:hidden;overflow-x:hidden;overflow-y:hidden;height:150%;width:150%;position:absolute;top:0px;left:0px;right:0px;bottom:0px" height="150%" width="150%"></iframe>
+	<script>
+	var iframe = document.getElementById("world");
+	var elmnt = iframe.contentWindow.document.getElementsByClassName("header")[0];
+	elmnt.style.display = "none"; 
+	var elmnt = iframe.contentWindow.document.getElementsByClassName("tabs ")[0];
+	elmnt.style.display = "none"; 
+	</script>
+</body>
+</html>
+	"""
 
 @app.route('/api/guides')
 def guides():
-	return json.dumps(json.loads('{"guides":[{"title":"How it Spreads?","link":"https://www.cdc.gov/coronavirus/2019-ncov/prepare/transmission.html","description":"Learn how Covid-19 spread"},{"title":"Symptoms","link":"https://www.cdc.gov/coronavirus/2019-ncov/symptoms-testing/symptoms.html","description":"Learn how Covid-19 symptoms"},{"title":"Prevention & treatment","link":"https://www.cdc.gov/coronavirus/2019-ncov/prepare/prevention.html","description":"Learn Covid-19 treatments"},{"title":"What to do","link":"https://www.cdc.gov/coronavirus/2019-ncov/if-you-are-sick/steps-when-sick.html","description":"What to do if you get the virus"}]}'))
+	return json.dumps(json.loads('{"guides":[{"title":"How it Spreads?","link":"https://www.cdc.gov/coronavirus/2019-ncov/prepare/transmission.html","description":"Learn how Covid-19 spread"},{"title":"Symptoms","link":"https://www.cdc.gov/coronavirus/2019-ncov/symptoms-testing/symptoms.html","description":"Learn Covid-19 symptoms"},{"title":"Prevention & treatment","link":"https://www.cdc.gov/coronavirus/2019-ncov/prepare/prevention.html","description":"Learn Covid-19 treatments"},{"title":"What to do","link":"https://www.cdc.gov/coronavirus/2019-ncov/if-you-are-sick/steps-when-sick.html","description":"What to do if you get the virus"}]}'))
 
 @app.route('/api/helpline')
 def helpline():
