@@ -50,7 +50,7 @@ Made With ❤ By   <a href="https://github.com/TheSpeedX">SpeedX</a>
 @app.route('/update/'+PASSWORD)
 def update():
 	maintext=requests.get("https://www.mohfw.gov.in/").text
-	text=maintext[maintext.find('<!-- data start-->'):maintext.find('<!--data end-->')]
+	text=maintext[maintext.find('<div class="table-responsive">'):maintext.find('<!-- Main section End  --> ')]
 	statedata=text.split("<tr>")
 	statedata=statedata[1:-1]
 	conn=create_connection(database)
