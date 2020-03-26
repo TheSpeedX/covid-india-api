@@ -1,3 +1,6 @@
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
+
 from flask import Flask , request, render_template, Markup
 import json
 from create_db import *
@@ -51,7 +54,7 @@ Made With ❤ By   <a href="https://github.com/TheSpeedX">SpeedX</a>
 def update():
 	options = Options()
 	options.headless = True
-	driver = webdriver.Firefox(options=options, executable_path=r'C:\Users\SpeedX\Desktop\Nitrotype Bot\geckodriver.exe')
+	driver = webdriver.Firefox(options=options)
 	driver.get("https://www.covid19india.org/")
 	html = driver.page_source
 	driver.quit()
