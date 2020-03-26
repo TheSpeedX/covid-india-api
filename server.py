@@ -1,4 +1,4 @@
-from flask import Flask , request
+from flask import Flask , request, render_template, Markup
 import json
 from create_db import *
 import sqlite3
@@ -49,13 +49,28 @@ Made With ❤ By   <a href="https://github.com/TheSpeedX">SpeedX</a>
 
 @app.route('/update/'+PASSWORD)
 def update():
+	options = Options()
+	options.headless = True
+	driver = webdriver.Firefox(options=options, executable_path=r'C:\Users\SpeedX\Desktop\Nitrotype Bot\geckodriver.exe')
+	driver.get("https://www.covid19india.org/")
+	html = driver.page_source
+	driver.quit()
+	f=open('map.dump','w')
+	f.write(html)
+	f.close()
+	# quote=india[india.find('<div class="snippet">'):]
+	# quote=quote[:quote.find('&nbsp')]
+	# hindia=html[html.find('<svg id="chart" width="650" height="750" viewBox="0 0 650 750" preserveAspectRatio="xMidYMid meet">'):]
+	# hindia=hindia[:hindia.find('</svg>')]+'</svg>'
+	# f=open('templates/india.html','w')
+	# f.write(hindia)
+	# f.close()
+	
 	maintext=requests.get("https://www.mohfw.gov.in/").text
 	text=maintext[maintext.find('<div class="table-responsive">'):maintext.find('<!-- Main section End  --> ')]
 	statedata=text.split("<tr>")
-	statedata=statedata[1:-1]
+	statedata=statedata[1:-2]
 	conn=create_connection(database)
-	
-	
 	olddata=fetch_report()
 	with open('data.dump', 'wb') as handle:
 		pickle.dump(olddata, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -64,6 +79,12 @@ def update():
 	clear_latest(conn)
 	for state in statedata:
 		data=re.findall(r"(?<=>)(.*)(?=<\/td>)",state)[1:]
+		ndata=[]
+		for d in data:
+			if '#' in d:
+				d=d[:-1]
+			ndata.append(d)
+		data=ndata
 		print(data)
 		print("\n\n")
 		update_state(conn,data[0],int(data[1])+int(data[2]),int(data[3]),int(data[4]))
@@ -160,6 +181,21 @@ def total_stats():
 @app.route('/api/all')
 def all_stats():
 	return json.dumps(fetch_all())
+
+@app.route('/api/quotes')
+def quote():
+	html=open("map.dump").read()
+	quote=html[html.find('<div class="snippet">')+21:]
+	quote=quote[:quote.find('&nbsp')]
+	return json.dumps({"quote":quote.strip()})
+
+@app.route('/india')
+def india():
+	html=open("map.dump").read()
+	hindia=html[html.find('<svg id="chart" width="650" height="750" viewBox="0 0 650 750" preserveAspectRatio="xMidYMid meet">'):]
+	hindia=hindia[:hindia.find('</svg>')]+'</svg>'
+	return Markup(hindia)
+
 	
 @app.route('/world')
 def world():

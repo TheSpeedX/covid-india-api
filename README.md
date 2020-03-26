@@ -17,6 +17,12 @@ Like:
 Start Server:
 ```python3 server.py```
 
+#### To Get A World Map
+Send A GET Request To ```http://domain.com/world```
+
+#### To Get India Heat Map
+Send A GET Request To ```http://domain.com/india```
+
 #### To Get All States Statistics
 Send A GET Request To ```http://domain.com/api/all```
 
@@ -34,6 +40,9 @@ Send A GET Request To ```http://domain.com/api/helpline```
 
 #### To Get HOW-TO Guides
 Send A GET Request To ```http://domain.com/api/guides```
+
+#### To Get Quotes
+Send A GET Request To ```http://domain.com/api/quotes```
 
 #### To Get A State's Statistics
 Send A POST Request To ```http://domain.com/api/state```
