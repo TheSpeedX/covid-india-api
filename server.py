@@ -1,6 +1,3 @@
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
-
 from flask import Flask , request, render_template, Markup
 import json
 from create_db import *
@@ -11,6 +8,8 @@ import requests
 import string
 from datetime import datetime
 import pickle
+import os
+import bs4
 
 app = Flask(__name__)
 # PASSWORD="5tr0ng_P@ssW0rD"
@@ -52,23 +51,7 @@ Made With ❤ By   <a href="https://github.com/TheSpeedX">SpeedX</a>
 
 @app.route('/update/'+PASSWORD)
 def update():
-	options = Options()
-	options.headless = True
-	driver = webdriver.Firefox(options=options)
-	driver.get("https://www.covid19india.org/")
-	html = driver.page_source
-	driver.quit()
-	f=open('map.dump','w')
-	f.write(html)
-	f.close()
-	# quote=india[india.find('<div class="snippet">'):]
-	# quote=quote[:quote.find('&nbsp')]
-	# hindia=html[html.find('<svg id="chart" width="650" height="750" viewBox="0 0 650 750" preserveAspectRatio="xMidYMid meet">'):]
-	# hindia=hindia[:hindia.find('</svg>')]+'</svg>'
-	# f=open('templates/india.html','w')
-	# f.write(hindia)
-	# f.close()
-	
+	os.system('python3 dump.py &')	
 	maintext=requests.get("https://www.mohfw.gov.in/").text
 	text=maintext[maintext.find('<div class="table-responsive">'):maintext.find('<!-- Main section End  --> ')]
 	statedata=text.split("<tr>")
@@ -192,14 +175,129 @@ def quote():
 	quote=quote[:quote.find('&nbsp')]
 	return json.dumps({"quote":quote.strip()})
 
+@app.route('/api/graphsvg/<param>')
+def graphsvg(param):
+	html=open("map.dump").read()
+	svg=html.split('<svg width="100" height="100" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">')[1:]
+	svgdata={"cases":None,"active":None,"cured":None,"death":None}
+	for i,key in enumerate(svgdata):
+		svgdata[key]='<svg width="100" height="100" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">'+svg[i][:svg[i].find('</svg>')+6]
+	print(svgdata)
+	if param in svgdata.keys():
+		return Markup(svgdata[param])
+	else:
+		return "Go Away!!"
+
+@app.route('/test')
+def test():
+	prefix="""
+	<html>
+	<head>
+	<title>Heatmap of India | By SpeedX </title>
+	
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+     <style>
+      @import url('https://fonts.googleapis.com/css?family=Unlock&display=swap');
+      </style>
+	<script>
+		function setdata(x)
+		{
+		document.getElementById("state").innerHTML=x
+		}
+		</script>
+	</head>
+	<body>
+	<div class="jumbotron bg-transparent sm-12">
+			<div class="row">
+				<div class="col-sm-3">
+					<div class="card bg-dark" align="center" id="state" style=" border: 1px #fff; border-radius: 20px; font-family: Unlock, cursive; color: #fff;">
+					</div>
+				</div>
+	<div class="col-sm-9">
+	"""
+	suffix="""</div></div></div>
+	
+</body></html>"""
+	html=open("map.dump").read()
+	
+	hindia='<svg id="chart" width="100%" height="auto" viewBox="0 0 650 750">'+html[html.find('<svg id="chart" width="650" height="450" viewBox="0 0 650 450" preserveAspectRatio="xMidYMid meet">')+99:]
+	hindia=hindia[:hindia.find('</svg>')]+'</svg>'
+	# hindia=hindia[:hindia.rfind('</g>')]+'</g></svg>'
+	# print(hindia)
+	soup = bs4.BeautifulSoup(prefix+hindia+suffix, 'html.parser') 
+	g_container = soup.find('g', class_='states')  
+	
+	for ptag in g_container.find_all('path'):
+		if 'Hello' in ptag.text:
+			continue
+		sd=ptag.text.split('from')[-1].strip()
+		sp=sd.lower()
+		data=fetch_state(sp)
+		addon=''.join([str(data[key])+" "+key+". <br>" for key in data])
+		ptag['onclick'] = "setdata('{text}');".format(text=str("State: "+sd+"<br>"+addon+str(ptag.text)))
+	
+	return Markup(str(soup))
+	
+
 @app.route('/india')
 def india():
-	html=open("map.dump").read()
-	hindia=html[html.find('<svg id="chart" width="650" height="750" viewBox="0 0 650 750" preserveAspectRatio="xMidYMid meet">'):]
-	hindia=hindia[:hindia.find('</svg>')]+'</svg>'
-	return Markup(hindia)
-
+	prefix="""
+	<html>
+	<head>
+	<title>Heatmap of India | By SpeedX </title>
 	
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+     <style>
+      @import url('https://fonts.googleapis.com/css?family=Unlock&display=swap');
+      </style>
+	<script>
+		function setdata(x)
+		{
+		document.getElementById("state").innerHTML=x
+		}
+		</script>
+	</head>
+	<body>
+	<div class="jumbotron bg-transparent sm-12">
+			<div class="row">
+				<div class="col-sm-3">
+					<div class="card bg-dark" align="center" id="state" style=" border: 1px #fff; border-radius: 20px; font-family: Unlock, cursive; color: #fff;">
+					</div>
+				</div>
+	<div class="col-sm-9">
+	"""
+	suffix="""</div></div></div>
+	
+</body></html>"""
+	html=open("map.dump").read()
+	
+	hindia='<svg id="chart" width="650" height="750" viewBox="0 0 650 750">'+html[html.find('<svg id="chart" width="650" height="450" viewBox="0 0 650 450" preserveAspectRatio="xMidYMid meet">')+99:]
+	hindia=hindia[:hindia.find('</svg>')]+'</svg>'
+	# hindia=hindia[:hindia.rfind('</g>')]+'</g></svg>'
+	# print(hindia)
+	soup = bs4.BeautifulSoup(prefix+hindia+suffix, 'html.parser') 
+	g_container = soup.find('g', class_='states')  
+	
+	for ptag in g_container.find_all('path'):
+		if 'Hello' in ptag.text:
+			continue
+		sd=ptag.text.split('from')[-1].strip()
+		sp=sd.lower()
+		data=fetch_state(sp)
+		addon=''.join([str(data[key])+" "+key+". <br>" for key in data])
+		ptag['onclick'] = "setdata('{text}');".format(text=str("State: "+sd+"<br>"+addon+str(ptag.text)))
+	
+	return Markup(str(soup))
 @app.route('/world')
 def world():
 	return """
