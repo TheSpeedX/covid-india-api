@@ -85,6 +85,11 @@ def update():
 		# print(data)
 		# print("\n\n")
 		update_state(conn,data[0],int(data[1])+int(data[2]),int(data[3]),int(data[4]))
+	if pos==-1:
+		ag=re.findall(text.split("<tr>")[-2])
+		for i,d in enumerate(ag):
+			if '#' in d:
+				pos=i+1
 	if pos==1 or pos==2:
 		extradata['column']='T'
 	elif pos==3:
