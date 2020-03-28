@@ -51,8 +51,9 @@ Made With ❤ By   <a href="https://github.com/TheSpeedX">SpeedX</a>
 
 @app.route('/update/'+PASSWORD)
 def update():
-	os.system('python3 dump.py &')	
+	os.system('python3 dump.py &')
 	maintext=requests.get("https://www.mohfw.gov.in/").text
+	
 	text=maintext[maintext.find('<div class="table-responsive">'):maintext.find('<!-- Main section End  --> ')]
 	statedata=text.split("<tr>")
 	statedata=statedata[1:-2]
@@ -61,19 +62,40 @@ def update():
 	with open('data.dump', 'wb') as handle:
 		pickle.dump(olddata, handle, protocol=pickle.HIGHEST_PROTOCOL)
 	
-	
+	extradata={"info":None,"column":None,"dist_link":None}
+	extradata['info']=maintext[maintext.find("# "):maintext.find("<",maintext.find("# ")+2)]
+	pdfs=re.findall(r"(https://www\.mohfw\.gov\.in/pdf/(.*)\.pdf)",maintext)
+	for l,n in pdfs:
+		if 'district' in n.lower():
+			extradata['dist_link']=l
+			break
+		else:
+			extradata['dist_link']=' '
 	clear_latest(conn)
+	pos=-1
 	for state in statedata:
 		data=re.findall(r"(?<=>)(.*)(?=<\/td>)",state)[1:]
 		ndata=[]
-		for d in data:
+		for i,d in enumerate(data):
 			if '#' in d:
 				d=d[:-1]
+				pos=i
 			ndata.append(d)
 		data=ndata
-		print(data)
-		print("\n\n")
+		# print(data)
+		# print("\n\n")
 		update_state(conn,data[0],int(data[1])+int(data[2]),int(data[3]),int(data[4]))
+	if pos==1 or pos==2:
+		extradata['column']='T'
+	elif pos==3:
+		extradata['column']='R'
+	elif pos==4:
+		extradata['column']='D'
+	else:
+		extradata['column']=' '
+	
+	with open('stat.dump', 'wb') as handle:
+		pickle.dump(extradata, handle, protocol=pickle.HIGHEST_PROTOCOL)
 	text=maintext[maintext.find('<div class="information_block">'):maintext.find('<div class="table-responsive">')]
 	data=re.findall(r"(?<=>)\d+(?=<)",text)[:-1]
 	# update_total(conn,int(data[0])-int(olddata["cases"]),int(data[1])-int(olddata["cured"]),int(data[2])-int(olddata["death"]))
@@ -168,16 +190,21 @@ def total_stats():
 def all_stats():
 	return json.dumps(fetch_all())
 
-@app.route('/api/quotes')
-def quote():
-	html=open("map.dump").read()
-	quote=html[html.find('<div class="snippet">')+21:]
-	quote=quote[:quote.find('&nbsp')]
-	return json.dumps({"quote":quote.strip()})
-
+@app.route('/api/extras')
+def extras():
+	try:
+		with open('stat.dump', 'rb') as handle:
+			extradata = pickle.load(handle)
+			return json.dumps(extradata)
+	except:
+		return json.dumps({"info":'',"column":'',"dist_link":''})
+	
 @app.route('/api/graphsvg/<param>')
 def graphsvg(param):
-	html=open("map.dump").read()
+	try:
+		html=open("map.dump").read()
+	except:
+		return "<h1>Go Away!!</h1>"
 	svg=html.split('<svg width="100" height="100" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">')[1:]
 	svgdata={"cases":None,"active":None,"cured":None,"death":None}
 	for i,key in enumerate(svgdata):
@@ -186,63 +213,8 @@ def graphsvg(param):
 	if param in svgdata.keys():
 		return Markup(svgdata[param])
 	else:
-		return "Go Away!!"
+		return "<h1>Go Away!!</h1>"
 
-@app.route('/test')
-def test():
-	prefix="""
-	<html>
-	<head>
-	<title>Heatmap of India | By SpeedX </title>
-	
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-     <style>
-      @import url('https://fonts.googleapis.com/css?family=Unlock&display=swap');
-      </style>
-	<script>
-		function setdata(x)
-		{
-		document.getElementById("state").innerHTML=x
-		}
-		</script>
-	</head>
-	<body>
-	<div class="jumbotron bg-transparent sm-12">
-			<div class="row">
-				<div class="col-sm-3">
-					<div class="card bg-dark" align="center" id="state" style=" border: 1px #fff; border-radius: 20px; font-family: Unlock, cursive; color: #fff;">
-					</div>
-				</div>
-	<div class="col-sm-9">
-	"""
-	suffix="""</div></div></div>
-	
-</body></html>"""
-	html=open("map.dump").read()
-	
-	hindia='<svg id="chart" width="100%" height="auto" viewBox="0 0 650 750">'+html[html.find('<svg id="chart" width="650" height="450" viewBox="0 0 650 450" preserveAspectRatio="xMidYMid meet">')+99:]
-	hindia=hindia[:hindia.find('</svg>')]+'</svg>'
-	# hindia=hindia[:hindia.rfind('</g>')]+'</g></svg>'
-	# print(hindia)
-	soup = bs4.BeautifulSoup(prefix+hindia+suffix, 'html.parser') 
-	g_container = soup.find('g', class_='states')  
-	
-	for ptag in g_container.find_all('path'):
-		if 'Hello' in ptag.text:
-			continue
-		sd=ptag.text.split('from')[-1].strip()
-		sp=sd.lower()
-		data=fetch_state(sp)
-		addon=''.join([str(data[key])+" "+key+". <br>" for key in data])
-		ptag['onclick'] = "setdata('{text}');".format(text=str("State: "+sd+"<br>"+addon+str(ptag.text)))
-	
-	return Markup(str(soup))
-	
 
 @app.route('/india')
 def india():
