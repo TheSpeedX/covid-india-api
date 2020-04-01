@@ -54,16 +54,19 @@ def update():
 	os.system('python3 dump.py &')
 	maintext=requests.get("https://www.mohfw.gov.in/").text
 	
-	text=maintext[maintext.find('<div class="table-responsive">'):maintext.find('<!-- Main section End  --> ')]
+	text=maintext[maintext.find('<div class="data-table table-responsive">'):maintext.find('<section id="site-advisories" class="site-update">')]
 	statedata=text.split("<tr>")
-	statedata=statedata[1:-2]
+	statedata=statedata[2:-2]
 	conn=create_connection(database)
 	olddata=fetch_report()
 	with open('data.dump', 'wb') as handle:
 		pickle.dump(olddata, handle, protocol=pickle.HIGHEST_PROTOCOL)
 	
 	extradata={"info":None,"column":None,"dist_link":None}
-	extradata['info']=maintext[maintext.find("# "):maintext.find("<",maintext.find("# ")+2)]
+	extradata['info']=re.findall(r"(?<=<strong>)(.*?)(?=<\/strong)",text.split('<tr>')[-1])[0]
+	tmp=maintext[maintext.find('<div class="status-update">'):maintext.find('</div>',maintext.find('<div class="status-update">'))]
+	extradata['timestamp']=tmp[tmp.find('<span>')+6:tmp.find('</span>')]
+	# print(extradata['timestamp'])
 	pdfs=re.findall(r"(https://www\.mohfw\.gov\.in/pdf/(.*)\.pdf)",maintext)
 	for l,n in pdfs:
 		if 'district' in n.lower():
@@ -73,6 +76,7 @@ def update():
 			extradata['dist_link']=' '
 	clear_latest(conn)
 	pos=-1
+	# print(statedata)
 	for state in statedata:
 		data=re.findall(r"(?<=>)(.*)(?=<\/td>)",state)[1:]
 		ndata=[]
@@ -84,9 +88,10 @@ def update():
 		data=ndata
 		# print(data)
 		# print("\n\n")
-		update_state(conn,data[0],int(data[1])+int(data[2]),int(data[3]),int(data[4]))
+		# update_state(conn,data[0],int(data[1])+int(data[2]),int(data[3]),int(data[4]))
+		update_state(conn,data[0],int(data[1]),int(data[2]),int(data[3]))
 	if pos==-1:
-		ag=re.findall(text.split("<tr>")[-2])
+		ag=re.findall(r"(?<=<strong>)(.*?)(?=<\/strong)",text.split("<tr>")[-2])
 		for i,d in enumerate(ag):
 			if '#' in d:
 				pos=i+1
@@ -101,11 +106,11 @@ def update():
 	
 	with open('stat.dump', 'wb') as handle:
 		pickle.dump(extradata, handle, protocol=pickle.HIGHEST_PROTOCOL)
-	text=maintext[maintext.find('<div class="information_block">'):maintext.find('<div class="table-responsive">')]
-	data=re.findall(r"(?<=>)\d+(?=<)",text)[:-1]
+	data=re.findall(r"(?<=>)(\d+)(?=(<|#))",text.split("<tr>")[-2])
+	data=[ d[0] for d in data]
 	# update_total(conn,int(data[0])-int(olddata["cases"]),int(data[1])-int(olddata["cured"]),int(data[2])-int(olddata["death"]))
-	# gen_new_report(data)
-	gen_new_report()
+	gen_new_report(data)
+	# gen_new_report()
 	URL = 'https://www.google.com/search?pz=1&cf=all&ned=us&hl=en&tbm=nws&gl=us&as_q={query}&as_occt=any&as_drrb=b&as_mindate={month}%2F%{from_day}%2F{year}&as_maxdate={month}%2F{to_day}%2F{year}&authuser=0'	
 	cd = datetime.now().day
 	cm = datetime.now().month
@@ -202,7 +207,7 @@ def extras():
 			extradata = pickle.load(handle)
 			return json.dumps(extradata)
 	except:
-		return json.dumps({"info":'',"column":'',"dist_link":''})
+		return json.dumps({"info":'',"column":'',"dist_link":'',"timestamp":''})
 	
 @app.route('/api/graphsvg/<param>')
 def graphsvg(param):
@@ -214,7 +219,7 @@ def graphsvg(param):
 	svgdata={"cases":None,"active":None,"cured":None,"death":None}
 	for i,key in enumerate(svgdata):
 		svgdata[key]='<svg width="100" height="100" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">'+svg[i][:svg[i].find('</svg>')+6]
-	print(svgdata)
+	# print(svgdata)
 	if param in svgdata.keys():
 		return Markup(svgdata[param])
 	else:
@@ -233,9 +238,12 @@ def india():
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <!-- Bootstrap CSS -->
+	
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+	</head>
+	<body>
      <style>
-      @import url('https://fonts.googleapis.com/css?family=Unlock&display=swap');
+      @import url('https://fonts.googleapis.com/css?family=Righteous&display=swap');
       </style>
 	<script>
 		function setdata(x)
@@ -243,12 +251,10 @@ def india():
 		document.getElementById("state").innerHTML=x
 		}
 		</script>
-	</head>
-	<body>
 	<div class="jumbotron bg-transparent sm-12">
 			<div class="row">
 				<div class="col-sm-3">
-					<div class="card bg-dark" align="center" id="state" style=" border: 1px #fff; border-radius: 20px; font-family: Unlock, cursive; color: #fff;">
+					<div class="card bg-dark" align="center" id="state" style=" border: 1px #fff; border-radius: 20px; font-family: Righteous, cursive; color: #fff;">
 					</div>
 				</div>
 	<div class="col-sm-9">
@@ -258,21 +264,23 @@ def india():
 </body></html>"""
 	html=open("map.dump").read()
 	
-	hindia='<svg id="chart" width="650" height="750" viewBox="0 0 650 750">'+html[html.find('<svg id="chart" width="650" height="450" viewBox="0 0 650 450" preserveAspectRatio="xMidYMid meet">')+99:]
+	hindia='<svg id="chart" width="650" height="750" viewBox="0 0 450 450">'+html[html.find('<svg id="chart" width="480" height="450" viewBox="0 0 480 450" preserveAspectRatio="xMidYMid meet">')+99:]
+	# hindia='<svg id="chart" width="650" height="750" viewBox="0 0 650 750">'+html[html.find('<svg id="chart" width="480" height="450" viewBox="0 0 480 450" preserveAspectRatio="xMidYMid meet">')+99:]
 	hindia=hindia[:hindia.find('</svg>')]+'</svg>'
 	# hindia=hindia[:hindia.rfind('</g>')]+'</g></svg>'
 	# print(hindia)
 	soup = bs4.BeautifulSoup(prefix+hindia+suffix, 'html.parser') 
 	g_container = soup.find('g', class_='states')  
-	
+	total=fetch_total()['cases']
 	for ptag in g_container.find_all('path'):
 		if 'Hello' in ptag.text:
 			continue
 		sd=ptag.text.split('from')[-1].strip()
 		sp=sd.lower()
 		data=fetch_state(sp)
-		addon=''.join([str(data[key])+" "+key+". <br>" for key in data])
-		ptag['onclick'] = "setdata('{text}');".format(text=str("State: "+sd+"<br>"+addon+str(ptag.text)))
+		addon=''.join(["Total "+key+": "+str(data[key])+" "+key+". <br>" for key in data])
+		perc=round(data['cases']/total*100.0,2)
+		ptag['onclick'] = "setdata('{text}');".format(text=str("State: "+sd+"<br>"+addon+str(perc)+"% from "+string.capwords(sp)))
 	
 	return Markup(str(soup))
 @app.route('/world')
@@ -283,13 +291,6 @@ def world():
 	</head>
 	<body style="margin:0px;padding:0px;overflow:hidden">
     <iframe src="http://bing.com/covid" id="world" frameborder="0" style="overflow:hidden;overflow-x:hidden;overflow-y:hidden;height:150%;width:150%;position:absolute;top:0px;left:0px;right:0px;bottom:0px" height="150%" width="150%"></iframe>
-	<script>
-	var iframe = document.getElementById("world");
-	var elmnt = iframe.contentWindow.document.getElementsByClassName("header")[0];
-	elmnt.style.display = "none"; 
-	var elmnt = iframe.contentWindow.document.getElementsByClassName("tabs ")[0];
-	elmnt.style.display = "none"; 
-	</script>
 </body>
 </html>
 	"""
@@ -322,7 +323,7 @@ def readme():
 	markdown.markdownFromFile(input="README.md",output=stream)
 	stream.seek(os.SEEK_SET)
 	text=stream.read().decode()
-	print(text)
+	# print(text)
 	return """	<html> <head> <title>README | By SpeedX</title> </head> <body>"""+str(text)+"""</body></html>"""
 
 @app.errorhandler(404) 

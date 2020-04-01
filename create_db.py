@@ -67,9 +67,8 @@ def update_news(title,link):
 	cur.execute(sql, (title,link))
 	conn.commit()
 	return cur.rowcount >=1
-# def gen_new_report(totaldata):
-def gen_new_report():
-	conn=create_connection(database)
+def gen_new_report(totaldata):
+# def gen_new_report():
 	conn=create_connection(database)
 	cur = conn.cursor()
 	cur.execute('''SELECT state,cases,cured,death FROM latest; ''')
@@ -84,8 +83,8 @@ def gen_new_report():
 		full.append("\n".join(semi))
 	fullreport="\n".join(full)
 	cur.execute('''SELECT sum(cases),sum(cured),sum(death) FROM information; ''')
-	data=cur.fetchall()[0]
-	# data=totaldata
+	# data=cur.fetchall()[0]
+	data=totaldata
 	sql = ''' INSERT INTO report(casereport,cases,cured,death) VALUES(?,?,?,?) '''
 	cur.execute(sql, (fullreport,data[0],data[1],data[2]))
 	conn.commit()
@@ -156,8 +155,8 @@ def fetch_total():
 	conn=create_connection(database)
 	cur = conn.cursor()
 	cur.execute('''SELECT cases,cured,death FROM report; ''')
-	data=cur.fetchall()[0]
 	try:
+		data=cur.fetchall()[0]
 		return {"cases":data[0],"cured":data[1],"death":data[2],"hospitalized":(int(data[0])-int(data[1])-int(data[2]))}
 	except:
 		return {"cases":0,"cured":0,"death":0,"hospitalized":0}
