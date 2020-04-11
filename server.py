@@ -51,7 +51,7 @@ Made With ❤ By   <a href="https://github.com/TheSpeedX">SpeedX</a>
 
 @app.route('/update/'+PASSWORD)
 def update():
-	os.system('python3 dump.py &')
+	# os.system('python3 dump.py &')
 	maintext=requests.get("https://www.mohfw.gov.in/").text
 	
 	text=maintext[maintext.find('<div class="data-table table-responsive">'):maintext.find('<section id="site-advisories" class="site-update">')]
@@ -77,11 +77,12 @@ def update():
 	clear_latest(conn)
 	pos=-1
 	# print(statedata)
+	notemark='*'
 	for state in statedata:
 		data=re.findall(r"(?<=>)(.*)(?=<\/td>)",state)[1:]
 		ndata=[]
 		for i,d in enumerate(data):
-			if '#' in d:
+			if notemark in d:
 				d=d[:-1]
 				pos=i
 			ndata.append(d)
@@ -93,7 +94,7 @@ def update():
 	if pos==-1:
 		ag=re.findall(r"(?<=<strong>)(.*?)(?=<\/strong)",text.split("<tr>")[-2])
 		for i,d in enumerate(ag):
-			if '#' in d:
+			if notemark in d:
 				pos=i+1
 	if pos==1 or pos==2:
 		extradata['column']='T'
@@ -106,7 +107,8 @@ def update():
 	
 	with open('stat.dump', 'wb') as handle:
 		pickle.dump(extradata, handle, protocol=pickle.HIGHEST_PROTOCOL)
-	data=re.findall(r"(?<=>)(\d+)(?=(<|#))",text.split("<tr>")[-2])
+	data=re.findall(r"(?<=>)(\d+)(?=(<|\*))",text.split("<tr>")[-2])
+	print(data)
 	data=[ d[0] for d in data]
 	# update_total(conn,int(data[0])-int(olddata["cases"]),int(data[1])-int(olddata["cured"]),int(data[2])-int(olddata["death"]))
 	gen_new_report(data)
@@ -278,7 +280,7 @@ def india():
 		sd=ptag.text.split('from')[-1].strip()
 		sp=sd.lower()
 		data=fetch_state(sp)
-		addon=''.join(["Total "+key+": "+str(data[key])+" "+key+". <br>" for key in data])
+		addon=''.join(["Total "+key+": "+str(data[key])+" <br>" for key in data])
 		perc=round(data['cases']/total*100.0,2)
 		ptag['onclick'] = "setdata('{text}');".format(text=str("State: "+sd+"<br>"+addon+str(perc)+"% from "+string.capwords(sp)))
 	
