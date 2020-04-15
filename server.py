@@ -281,7 +281,7 @@ def india():
 		sp=sd.lower()
 		data=fetch_state(sp)
 		addon=''.join(["Total "+key+": "+str(data[key])+" <br>" for key in data])
-		perc=round(data['cases']/total*100.0,2)
+		perc=round(data['cases']/total*100.0,2) if total!=0 else 0
 		ptag['onclick'] = "setdata('{text}');".format(text=str("State: "+sd+"<br>"+addon+str(perc)+"% from "+string.capwords(sp)))
 		ptag.string.replace_with(str(perc)+"% from "+string.capwords(sp))
 	
