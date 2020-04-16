@@ -51,19 +51,19 @@ Made With ❤ By   <a href="https://github.com/TheSpeedX">SpeedX</a>
 
 @app.route('/update/'+PASSWORD)
 def update():
-	# os.system('python3 dump.py &')
+	os.system('python3 dump.py &')
 	maintext=requests.get("https://www.mohfw.gov.in/").text
 	
 	text=maintext[maintext.find('<div class="data-table table-responsive">'):maintext.find('<section id="site-advisories" class="site-update">')]
 	statedata=text.split("<tr>")
-	statedata=statedata[2:-2]
+	statedata=statedata[2:-3]
 	conn=create_connection(database)
 	olddata=fetch_report()
 	with open('data.dump', 'wb') as handle:
 		pickle.dump(olddata, handle, protocol=pickle.HIGHEST_PROTOCOL)
 	
 	extradata={"info":None,"column":None,"dist_link":None}
-	extradata['info']=re.findall(r"(?<=<strong>)(.*?)(?=<\/strong)",text.split('<tr>')[-1])[0]
+	extradata['info']=re.findall(r"(?<=<strong>)(.*?)(?=<\/strong)",text.split('<tr>')[-2])[0]
 	tmp=maintext[maintext.find('<div class="status-update">'):maintext.find('</div>',maintext.find('<div class="status-update">'))]
 	extradata['timestamp']=tmp[tmp.find('<span>')+6:tmp.find('</span>')]
 	# print(extradata['timestamp'])
@@ -83,6 +83,8 @@ def update():
 		ndata=[]
 		for i,d in enumerate(data):
 			if notemark in d:
+				if '#' in d:
+					d=d.replace('#','')
 				d=d[:-1]
 				pos=i
 			ndata.append(d)
@@ -107,8 +109,8 @@ def update():
 	
 	with open('stat.dump', 'wb') as handle:
 		pickle.dump(extradata, handle, protocol=pickle.HIGHEST_PROTOCOL)
-	data=re.findall(r"(?<=>)(\d+)(?=(<|\*))",text.split("<tr>")[-2])
-	print(data)
+	data=re.findall(r"(?<=>)(\d+)(?=(<|\*))",text.split("<tr>")[-3])
+	# print(data)
 	data=[ d[0] for d in data]
 	# update_total(conn,int(data[0])-int(olddata["cases"]),int(data[1])-int(olddata["cured"]),int(data[2])-int(olddata["death"]))
 	gen_new_report(data)
@@ -266,7 +268,7 @@ def india():
 </body></html>"""
 	html=open("map.dump").read()
 	
-	hindia='<svg id="chart" width="650" height="750" viewBox="0 0 450 450">'+html[html.find('<svg id="chart" width="480" height="450" viewBox="0 0 480 450" preserveAspectRatio="xMidYMid meet">')+99:]
+	hindia='<svg id="chart" width="650" height="750" viewBox="0 0 450 450">'+html[html.find('<g class="india">')+17:]
 	# hindia='<svg id="chart" width="650" height="750" viewBox="0 0 650 750">'+html[html.find('<svg id="chart" width="480" height="450" viewBox="0 0 480 450" preserveAspectRatio="xMidYMid meet">')+99:]
 	hindia=hindia[:hindia.find('</svg>')]+'</svg>'
 	# hindia=hindia[:hindia.rfind('</g>')]+'</g></svg>'
