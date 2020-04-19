@@ -56,14 +56,14 @@ def update():
 	
 	text=maintext[maintext.find('<div class="data-table table-responsive">'):maintext.find('<section id="site-advisories" class="site-update">')]
 	statedata=text.split("<tr>")
-	statedata=statedata[2:-3]
+	statedata=statedata[2:-2]
 	conn=create_connection(database)
 	olddata=fetch_report()
 	with open('data.dump', 'wb') as handle:
 		pickle.dump(olddata, handle, protocol=pickle.HIGHEST_PROTOCOL)
 	
 	extradata={"info":None,"column":None,"dist_link":None}
-	extradata['info']=re.findall(r"(?<=<strong>)(.*?)(?=<\/strong)",text.split('<tr>')[-2])[0]
+	extradata['info']=re.findall(r"(?<=<strong>)(.*?)(?=<\/strong)",text.split('<tr>')[-1])[0]
 	tmp=maintext[maintext.find('<div class="status-update">'):maintext.find('</div>',maintext.find('<div class="status-update">'))]
 	extradata['timestamp']=tmp[tmp.find('<span>')+6:tmp.find('</span>')]
 	# print(extradata['timestamp'])
@@ -94,7 +94,7 @@ def update():
 		# update_state(conn,data[0],int(data[1])+int(data[2]),int(data[3]),int(data[4]))
 		update_state(conn,data[0],int(data[1]),int(data[2]),int(data[3]))
 	if pos==-1:
-		ag=re.findall(r"(?<=<strong>)(.*?)(?=<\/strong)",text.split("<tr>")[-2])
+		ag=re.findall(r"(?<=<strong>)(.*?)(?=<\/strong)",text.split("<tr>")[-1])
 		for i,d in enumerate(ag):
 			if notemark in d:
 				pos=i+1
@@ -109,7 +109,7 @@ def update():
 	
 	with open('stat.dump', 'wb') as handle:
 		pickle.dump(extradata, handle, protocol=pickle.HIGHEST_PROTOCOL)
-	data=re.findall(r"(?<=>)(\d+)(?=(<|\*))",text.split("<tr>")[-3])
+	data=re.findall(r"(?<=>)(\d+)(?=(<|\*))",text.split("<tr>")[-2])
 	# print(data)
 	data=[ d[0] for d in data]
 	# update_total(conn,int(data[0])-int(olddata["cases"]),int(data[1])-int(olddata["cured"]),int(data[2])-int(olddata["death"]))
