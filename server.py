@@ -56,7 +56,8 @@ def update():
 	
 	text=maintext[maintext.find('<div class="data-table table-responsive">'):maintext.find('<section id="site-advisories" class="site-update">')]
 	statedata=text.split("<tr>")
-	statedata=statedata[2:-2]
+	below_row=2
+	statedata=statedata[2:-1-below_row]
 	conn=create_connection(database)
 	olddata=fetch_report()
 	with open('data.dump', 'wb') as handle:
@@ -89,7 +90,7 @@ def update():
 				pos=i
 			ndata.append(d)
 		data=ndata
-		# print(data)
+		print(data)
 		# print("\n\n")
 		# update_state(conn,data[0],int(data[1])+int(data[2]),int(data[3]),int(data[4]))
 		update_state(conn,data[0],int(data[1]),int(data[2]),int(data[3]))
@@ -109,8 +110,8 @@ def update():
 	
 	with open('stat.dump', 'wb') as handle:
 		pickle.dump(extradata, handle, protocol=pickle.HIGHEST_PROTOCOL)
-	data=re.findall(r"(?<=>)(\d+)(?=(<|\*))",text.split("<tr>")[-2])
-	# print(data)
+	data=re.findall(r"(?<=>)(\d+)(?=(<|\*))",text.split("<tr>")[-1-below_row])
+	print(data)
 	data=[ d[0] for d in data]
 	# update_total(conn,int(data[0])-int(olddata["cases"]),int(data[1])-int(olddata["cured"]),int(data[2])-int(olddata["death"]))
 	gen_new_report(data)
