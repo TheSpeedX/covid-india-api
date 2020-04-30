@@ -51,13 +51,13 @@ Made With ❤ By   <a href="https://github.com/TheSpeedX">SpeedX</a>
 
 @app.route('/update/'+PASSWORD)
 def update():
-	os.system('python3 dump.py &')
+	# os.system('python3 dump.py &')
 	maintext=requests.get("https://www.mohfw.gov.in/").text
 	
 	text=maintext[maintext.find('<div class="data-table table-responsive">'):maintext.find('<section id="site-advisories" class="site-update">')]
 	statedata=text.split("<tr>")
-	below_row=2
-	statedata=statedata[2:-1-below_row]
+	below_row=text.count('"text-align:center;"')
+	statedata=statedata[2:0-below_row-1]
 	conn=create_connection(database)
 	olddata=fetch_report()
 	with open('data.dump', 'wb') as handle:
@@ -83,10 +83,9 @@ def update():
 		data=re.findall(r"(?<=>)(.*)(?=<\/td>)",state)[1:]
 		ndata=[]
 		for i,d in enumerate(data):
+			ed=re.findall(r"\d+",d)
+			d=d if len(ed) == 0 else ed[0]
 			if notemark in d:
-				if '#' in d:
-					d=d.replace('#','')
-				d=d[:-1]
 				pos=i
 			ndata.append(d)
 		data=ndata
@@ -110,7 +109,7 @@ def update():
 	
 	with open('stat.dump', 'wb') as handle:
 		pickle.dump(extradata, handle, protocol=pickle.HIGHEST_PROTOCOL)
-	data=re.findall(r"(?<=>)(\d+)(?=(<|\*))",text.split("<tr>")[-1-below_row])
+	data=re.findall(r"(?<=>)(\d+)(?=(<|\*))",text.split("<tr>")[0-below_row-1])
 	print(data)
 	data=[ d[0] for d in data]
 	# update_total(conn,int(data[0])-int(olddata["cases"]),int(data[1])-int(olddata["cured"]),int(data[2])-int(olddata["death"]))
@@ -220,7 +219,7 @@ def graphsvg(param):
 		html=open("map.dump").read()
 	except:
 		return "<h1>Go Away!!</h1>"
-	svg=html.split('<svg width="100" height="100" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">')[1:]
+	svg=html.split('<svg width="100" height="75" viewBox="0 0 100 75" preserveAspectRatio="xMidYMid meet">')[1:]
 	svgdata={"cases":None,"active":None,"cured":None,"death":None}
 	for i,key in enumerate(svgdata):
 		svgdata[key]='<svg width="100" height="100" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">'+svg[i][:svg[i].find('</svg>')+6]
@@ -282,6 +281,8 @@ def india():
 			continue
 		sd=ptag.text.split('from')[-1].strip()
 		sp=sd.lower()
+		if 'telangana' in sp:
+			sp='telengana'
 		data=fetch_state(sp)
 		addon=''.join(["Total "+key+": "+str(data[key])+" <br>" for key in data])
 		perc=round(data['cases']/total*100.0,2) if total!=0 else 0
