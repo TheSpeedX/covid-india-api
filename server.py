@@ -57,6 +57,7 @@ def update():
 	text=maintext[maintext.find('<div class="data-table table-responsive">'):maintext.find('<section id="site-advisories" class="site-update">')]
 	statedata=text.split("<tr>")
 	below_row=text.count('"text-align:center;"')
+	print(below_row)
 	statedata=statedata[2:0-below_row-1]
 	conn=create_connection(database)
 	olddata=fetch_report()
@@ -92,7 +93,10 @@ def update():
 		print(data)
 		# print("\n\n")
 		# update_state(conn,data[0],int(data[1])+int(data[2]),int(data[3]),int(data[4]))
-		update_state(conn,data[0],int(data[1]),int(data[2]),int(data[3]))
+		try:
+			update_state(conn,data[0],int(data[1]),int(data[2]),int(data[3]))
+		except:
+			continue
 	if pos==-1:
 		ag=re.findall(r"(?<=<strong>)(.*?)(?=<\/strong)",text.split("<tr>")[-1])
 		for i,d in enumerate(ag):
@@ -109,7 +113,8 @@ def update():
 	
 	with open('stat.dump', 'wb') as handle:
 		pickle.dump(extradata, handle, protocol=pickle.HIGHEST_PROTOCOL)
-	data=re.findall(r"(?<=>)(\d+)(?=(<|\*))",text.split("<tr>")[0-below_row-1])
+	# print(text.split("<tr>")[0-below_row-1])
+	data=re.findall(r"(?<=>)(\d+)(?=(<|\*|#))",text.split("<tr>")[0-below_row-1])
 	print(data)
 	data=[ d[0] for d in data]
 	# update_total(conn,int(data[0])-int(olddata["cases"]),int(data[1])-int(olddata["cured"]),int(data[2])-int(olddata["death"]))
@@ -266,15 +271,15 @@ def india():
 	suffix="""</div></div></div>
 	
 </body></html>"""
-	html=open("map.dump").read()
+	html=open("map.dump",'r',encoding='utf8').read()
 	
-	hindia='<svg id="chart" width="650" height="750" viewBox="0 0 450 450">'+html[html.find('<g class="india">')+17:]
+	hindia='<svg id="chart" width="650" height="750" viewBox="0 0 450 450">'+html[html.find('<g',html.find('<svg id="chart" preserveAspectRatio="xMidYMid meet"')+51):]
 	# hindia='<svg id="chart" width="650" height="750" viewBox="0 0 650 750">'+html[html.find('<svg id="chart" width="480" height="450" viewBox="0 0 480 450" preserveAspectRatio="xMidYMid meet">')+99:]
 	hindia=hindia[:hindia.find('</svg>')]+'</svg>'
 	# hindia=hindia[:hindia.rfind('</g>')]+'</g></svg>'
 	# print(hindia)
 	soup = bs4.BeautifulSoup(prefix+hindia+suffix, 'html.parser') 
-	g_container = soup.find('g', class_='states')  
+	g_container = soup.find('g', class_='regions')  
 	total=fetch_total()['cases']
 	for ptag in g_container.find_all('path'):
 		if 'Hello' in ptag.text:
@@ -287,6 +292,7 @@ def india():
 		addon=''.join(["Total "+key+": "+str(data[key])+" <br>" for key in data])
 		perc=round(data['cases']/total*100.0,2) if total!=0 else 0
 		ptag['onclick'] = "setdata('{text}');".format(text=str("State: "+sd+"<br>"+addon+str(perc)+"% from "+string.capwords(sp)))
+		ptag['pointer-events']="all"
 		ptag.string.replace_with(str(perc)+"% from "+string.capwords(sp))
 	
 	return Markup(str(soup))
