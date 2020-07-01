@@ -94,7 +94,7 @@ def update():
 		# print("\n\n")
 		# update_state(conn,data[0],int(data[1])+int(data[2]),int(data[3]),int(data[4]))
 		try:
-			update_state(conn,data[0],int(data[1]),int(data[2]),int(data[3]))
+			update_state(conn,data[0],int(data[1])+int(data[2]),int(data[2]),int(data[3]))
 		except:
 			continue
 	if pos==-1:
