@@ -94,7 +94,7 @@ def update():
 		# print("\n\n")
 		# update_state(conn,data[0],int(data[1])+int(data[2]),int(data[3]),int(data[4]))
 		try:
-			update_state(conn,data[0],int(data[1])+int(data[2]),int(data[2]),int(data[3]))
+			update_state(conn,data[0],int(data[4]),int(data[2]),int(data[3]))
 		except:
 			continue
 	if pos==-1:
@@ -117,6 +117,7 @@ def update():
 	data=re.findall(r"(?<=>)(\d+)(?=(<|\*|#))",text.split("<tr>")[0-below_row-1])
 	print(data)
 	data=[ d[0] for d in data]
+	data=[data[3],data[1],data[2]]
 	# update_total(conn,int(data[0])-int(olddata["cases"]),int(data[1])-int(olddata["cured"]),int(data[2])-int(olddata["death"]))
 	gen_new_report(data)
 	# gen_new_report()
